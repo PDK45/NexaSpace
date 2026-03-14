@@ -26,6 +26,20 @@ except Exception as e:
     print("Warning: Collection 'property_intents' not found. Run ingest.py first.")
     collection = None
 
+# Set up Groq AI for lightning-fast dynamic reasoning on search results
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
+groq_key = os.getenv("GROQ_API_KEY")
+
+groq_client = None
+if groq_key:
+    groq_client = Groq(api_key=groq_key)
+    print("Active AI Reasoning powered by Groq (Llama 3) is Online.")
+else:
+    print("No GROQ_API_KEY found. Running in vector-only mode.")
+
 # Pydantic model for incoming search queries
 class SearchQuery(BaseModel):
     intent: str
@@ -46,12 +60,44 @@ def search_properties(query: SearchQuery):
         if not results['documents'][0]:
             return {"matches": []}
 
+        # Limit to the top 2 absolute best matches visually so the screen isn't overwhelmed with all properties
+        top_n = min(2, len(results['documents'][0]))
+        
         formatted_results = []
-        for i in range(len(results['documents'][0])):
+        for i in range(top_n):
             metadata = results['metadatas'][0][i]
-            # Ensure file path is accessible by the static server (assuming images are in the root directory relative to the script)
-            # The static server will mount the current directory at /static
-            image_url = f"/static/{metadata.get('file_path').replace(chr(92), '/')}" 
+            
+            # Check if file_path is external or local
+            file_path = metadata.get('file_path', '')
+            if file_path.startswith('http'):
+                image_url = file_path
+            else:
+                # Assuming local static file
+                image_url = f"/static/{file_path.replace(chr(92), '/')}" 
+
+            # 🧠 Active AI Reasoning (The Magic UI feature via Groq)
+            ai_reasoning = ""
+            if groq_client and i == 0:  # Only reason for the top absolute match to save time
+                try:
+                    reason_prompt = f"A user searched for: '{query.intent}'. We found a property matching this description: '{results['documents'][0][i]}'. In one short, punchy, impressive sentence, explain why this property is the perfect match for their intent."
+                    
+                    chat_completion = groq_client.chat.completions.create(
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are NexaSpace, an elite AI real estate assistant. Respond with exactly one sentence."
+                            },
+                            {
+                                "role": "user",
+                                "content": reason_prompt,
+                            }
+                        ],
+                        model="llama3-70b-8192",
+                    )
+                    ai_reasoning = chat_completion.choices[0].message.content.strip()
+                except Exception as e:
+                    print(f"Groq API Error: {e}")
+                    pass
 
             formatted_results.append({
                 "id": results['ids'][0][i],
@@ -62,7 +108,8 @@ def search_properties(query: SearchQuery):
                 "lighting": metadata.get('lighting', 'Unknown'),
                 "clutter_factor": metadata.get('clutter_factor', 'Unknown'),
                 "true_potential": metadata.get('true_potential', 'Unknown'),
-                "rich_description": results['documents'][0][i]
+                "rich_description": results['documents'][0][i],
+                "ai_reasoning": ai_reasoning
             })
 
         return {"matches": formatted_results}

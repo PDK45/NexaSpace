@@ -345,6 +345,16 @@
                     card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 opacity-0";
                     card.style.animation = `fadeUp 0.6s ease forwards ${index * 0.1}s`;
                     
+                    const aiReasoningHTML = match.ai_reasoning ? `
+                        <div class="mt-2 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-100 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-blue-500"></div>
+                            <p class="text-xs font-bold text-purple-700 mb-1 flex items-center">
+                                <span class="mr-1">✨</span> Live AI Match Reasoning
+                            </p>
+                            <p class="text-sm text-slate-800">"${match.ai_reasoning}"</p>
+                        </div>
+                    ` : '';
+
                     card.innerHTML = `
                         <div class="relative h-56 xl:h-64 overflow-hidden group">
                             <!-- Note: match.image_url comes from the backend relative to the datasets folder -->
@@ -354,7 +364,7 @@
                                 ${matchPercent}% AI Match
                             </div>
                         </div>
-                        <div class="p-6">
+                        <div class="p-6 flex flex-col h-full">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <p class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-1">${match.architectural_style}</p>
@@ -362,7 +372,7 @@
                                 </div>
                             </div>
                             
-                            <div class="space-y-3 mb-6">
+                            <div class="space-y-3 mb-4">
                                 <div class="flex items-center text-sm">
                                     <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-xs">💡</span>
                                     <span class="text-slate-600 truncate" title="${match.lighting}">${match.lighting}</span>
@@ -373,11 +383,13 @@
                                 </div>
                             </div>
 
-                            <div class="bg-white/60 rounded-xl p-4 border border-white shrink-0">
-                                <p class="text-sm text-slate-700 italic line-clamp-3" title="${match.rich_description}">
-                                    "${match.rich_description}"
+                            <div class="bg-white/60 rounded-xl p-3 border border-white shrink-0">
+                                <p class="text-xs text-slate-500 italic line-clamp-2" title="${match.rich_description}">
+                                    Base vector: "${match.rich_description}"
                                 </p>
                             </div>
+                            
+                            ${aiReasoningHTML}
                         </div>
                     `;
                     resultsContainer.appendChild(card);
