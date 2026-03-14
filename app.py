@@ -113,7 +113,37 @@ def search_properties(query: SearchQuery):
             })
 
         return {"matches": formatted_results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+# Pydantic model for chatbot messages
+class ChatMessage(BaseModel):
+    message: str
+    history: list = []
+
+@app.post("/api/chat")
+async def chat_with_ai(chat: ChatMessage):
+    if not groq_client:
+        raise HTTPException(status_code=500, detail="Groq AI not configured.")
+    
+    try:
+        # Build conversation context
+        messages = [
+            {"role": "system", "content": "You are NexaSpace Innovator, an elite architectural AI. Help users brainstorm real estate ideas, spatial renovations, and explain how NexaSpace can find properties based on intent. Be punchy, professional, and creative."}
+        ]
+        
+        # Add history if provided
+        for msg in chat.history[-5:]: # Last 5 turns for context
+            messages.append(msg)
+            
+        messages.append({"role": "user", "content": chat.message})
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=messages,
+            model="llama3-70b-8192",
+        )
+        
+        return {"response": chat_completion.choices[0].message.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
