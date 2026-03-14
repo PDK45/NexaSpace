@@ -92,7 +92,7 @@ def search_properties(query: SearchQuery):
                                 "content": reason_prompt,
                             }
                         ],
-                        model="llama3-70b-8192",
+                        model="llama-3.3-70b-versatile",
                     )
                     ai_reasoning = chat_completion.choices[0].message.content.strip()
                 except Exception as e:
@@ -140,11 +140,12 @@ async def chat_with_ai(chat: ChatMessage):
 
         chat_completion = groq_client.chat.completions.create(
             messages=messages,
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
         )
         
         return {"response": chat_completion.choices[0].message.content}
     except Exception as e:
+        print(f"Chat Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Mount static files to serve the frontend UI and the images
