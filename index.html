@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexaSpace | AI Spatial Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.12.16/framer-motion.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .dark .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .bg-mesh {
+            background-color: #f3f4f6;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(28,100%,74%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 50%, hsla(340,100%,76%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(22,100%,77%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 100%, hsla(242,100%,70%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, hsla(343,100%,76%,1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3; /* Light grey */
+            border-top: 3px solid #000000; /* Black */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-mesh min-h-screen text-slate-800 flex flex-col items-center pt-24 px-6 transition-all duration-700" id="main-body">
+
+    <!-- Header / Logo -->
+    <div id="header-container" class="w-full max-w-7xl mx-auto transition-all duration-700 ease-in-out transform translate-y-32">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10">
+            <div class="text-center md:text-left">
+                <h1 class="text-5xl md:text-6xl font-bold tracking-tight mb-2 text-slate-900">
+                    Nexa<span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Space</span>
+                </h1>
+                <p class="text-md text-slate-600 max-w-md">
+                    Autonomous Spatial Reasoning Engine.
+                </p>
+            </div>
+            
+            <!-- Dashboard Toggle -->
+            <div class="mt-6 md:mt-0 glass-panel rounded-full p-1.5 flex shadow-sm">
+                <button id="tab-search" class="px-6 py-2 rounded-full bg-white text-slate-800 font-semibold shadow-sm text-sm transition-all duration-300">Semantic Search</button>
+                <button id="tab-dash" class="px-6 py-2 rounded-full text-slate-500 font-medium hover:text-slate-800 text-sm transition-all duration-300">Enterprise Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container (Hidden initially) -->
+    <div id="dashboard-container" class="w-full max-w-7xl hidden transition-all duration-700 opacity-0 transform -translate-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-panel p-6 rounded-3xl shadow-lg border border-white/40">
+                <div class="flex items-center text-slate-500 mb-2">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Total Vector Embeddings
+                </div>
+                <div class="text-4xl font-bold text-slate-800">12,408</div>
+                <div class="text-emerald-500 text-sm font-semibold mt-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    +3,210 This Week
+                </div>
+            </div>
+            
+            <div class="glass-panel p-6 rounded-3xl shadow-lg border border-white/40">
+                <div class="flex items-center text-slate-500 mb-2">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    AI Processing Deflection Rate
+                </div>
+                <div class="text-4xl font-bold text-slate-800">92.4%</div>
+                <div class="text-slate-500 text-sm font-medium mt-2">Images tagged without human review</div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-3xl shadow-lg border border-white/40 bg-gradient-to-br from-purple-600 to-blue-500 text-white border-none">
+                <div class="flex items-center text-white/80 mb-2">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    System Status
+                </div>
+                <div class="text-3xl font-bold">All Systems Nominal</div>
+                <div class="text-white/80 text-sm font-medium mt-3 flex items-center">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
+                    ChromaDB Vector Engine Live
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-8 rounded-3xl shadow-xl w-full border border-white/40 mb-10">
+            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                <span class="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">🚀</span> Live Data Ingestion Stream
+            </h3>
+            
+            <div class="space-y-4">
+                <!-- Mock Stream item -->
+                <div class="bg-white/60 p-4 rounded-xl flex justify-between items-center border border-white">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gray-200 rounded-lg mr-4 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=100&q=80" alt="stream" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm text-slate-800">property_99182.jpg</p>
+                            <p class="text-xs text-slate-500">Processed by Gemini 1.5 Pro</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">Vectorized</span>
+                        <p class="text-xs text-slate-400 mt-1">Found: Mid-Century Modern</p>
+                    </div>
+                </div>
+
+                <!-- Mock Stream item -->
+                 <div class="bg-white/60 p-4 rounded-xl flex justify-between items-center border border-white">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gray-200 rounded-lg mr-4 overflow-hidden">
+                             <img src="https://images.unsplash.com/photo-1554995207-c18c203602cb?w=100&q=80" alt="stream" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm text-slate-800">mls_residential_442.png</p>
+                            <p class="text-xs text-slate-500">Processed by Gemini 1.5 Pro</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">Vectorized</span>
+                        <p class="text-xs text-orange-400 mt-1 font-medium">Ignored Heavy Clutter</p>
+                    </div>
+                </div>
+            </div>
+            <button class="w-full mt-6 py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-medium hover:bg-slate-50 hover:border-slate-400 transition-colors">
+                + Upload Raw Batch
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar Wrapper -->
+    <div id="search-wrapper" class="w-full flex flex-col items-center">
+    <div id="search-container" class="w-full max-w-3xl transition-all duration-700 ease-in-out transform translate-y-32 z-10">
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div class="relative glass-panel rounded-2xl shadow-2xl flex items-center p-2">
+                <svg class="w-6 h-6 text-slate-400 ml-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="search-input" 
+                       class="w-full bg-transparent border-none text-lg py-4 focus:ring-0 outline-none placeholder-slate-400" 
+                       placeholder="e.g. 'A kitchen big enough to host Thanksgiving with an industrial vibe.'">
+                <button id="search-btn" class="bg-slate-900 text-white px-8 py-4 rounded-xl font-medium hover:bg-slate-800 transition-colors shadow-md flex items-center">
+                    <span id="btn-text">Search</span>
+                    <div id="btn-loader" class="loader hidden ml-2 border-t-white"></div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Prompts tags -->
+        <div class="flex flex-wrap gap-2 mt-4 justify-center" id="quick-tags">
+            <button class="text-xs bg-white bg-opacity-50 hover:bg-opacity-80 px-3 py-1.5 rounded-full border border-slate-200 transition">"mid-century aesthetics but messy"</button>
+            <button class="text-xs bg-white bg-opacity-50 hover:bg-opacity-80 px-3 py-1.5 rounded-full border border-slate-200 transition">"gothic style with lots of clutter"</button>
+            <button class="text-xs bg-white bg-opacity-50 hover:bg-opacity-80 px-3 py-1.5 rounded-full border border-slate-200 transition">"massive potential for natural light"</button>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="results-container" class="w-full max-w-7xl mt-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 opacity-0 hidden transition-opacity duration-1000 pb-20">
+        
+        <!-- Example Card Template (Injected via JS) -->
+        <!--
+        <div class="glass-panel rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <div class="relative h-64 overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d" class="object-cover w-full h-full hover:scale-105 transition-transform duration-700" alt="Property">
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-emerald-600 shadow-sm">
+                    98% Match
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-sm text-purple-600 font-semibold uppercase tracking-wider mb-1">Industrial Modern</p>
+                        <h3 class="text-xl font-bold text-slate-900 leading-tight">High Spatial Flow</h3>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center text-sm">
+                        <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">💡</span>
+                        <span class="text-slate-600">Excellent natural lighting</span>
+                    </div>
+                     <div class="flex items-center text-sm">
+                        <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mr-3">🗑️</span>
+                        <span class="text-slate-600">High Clutter (Ignored by AI)</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <p class="text-sm text-slate-700 italic">
+                        "Despite the severe clutter, this room possesses incredible foundational bones..."
+                    </p>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+
+    </div> <!-- End Search Wrapper -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            const resultsContainer = document.getElementById('results-container');
+            const headerContainer = document.getElementById('header-container');
+            const searchWrapper = document.getElementById('search-wrapper');
+            const dashboardContainer = document.getElementById('dashboard-container');
+            
+            // Tab Buttons
+            const tabSearch = document.getElementById('tab-search');
+            const tabDash = document.getElementById('tab-dash');
+            
+            const quickTags = document.querySelectorAll('#quick-tags button');
+
+            // Tab Switching Logic
+            tabSearch.addEventListener('click', () => {
+                tabSearch.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                tabSearch.classList.remove('text-slate-500', 'hover:text-slate-800');
+                
+                tabDash.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                tabDash.classList.add('text-slate-500', 'hover:text-slate-800');
+                
+                dashboardContainer.classList.add('opacity-0', '-translate-y-4');
+                setTimeout(() => {
+                    dashboardContainer.classList.add('hidden');
+                    searchWrapper.classList.remove('hidden');
+                    setTimeout(() => searchWrapper.classList.remove('opacity-0', 'translate-y-4'), 50);
+                }, 300);
+            });
+
+            tabDash.addEventListener('click', () => {
+                tabDash.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                tabDash.classList.remove('text-slate-500', 'hover:text-slate-800');
+                
+                tabSearch.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                tabSearch.classList.add('text-slate-500', 'hover:text-slate-800');
+                
+                searchWrapper.classList.add('opacity-0', 'translate-y-4');
+                resultsContainer.classList.add('hidden', 'opacity-0'); // hide results if open
+                
+                setTimeout(() => {
+                    searchWrapper.classList.add('hidden');
+                    dashboardContainer.classList.remove('hidden');
+                    setTimeout(() => dashboardContainer.classList.remove('opacity-0', '-translate-y-4'), 50);
+                }, 300);
+            });
+
+            // Handle Quick Tags
+            quickTags.forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    const text = e.target.innerText.replace(/"/g, '');
+                    searchInput.value = text;
+                    performSearch();
+                });
+            });
+
+            // Handle Enter Key
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            searchBtn.addEventListener('click', performSearch);
+
+            async function performSearch() {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                // UI Loading State
+                btnText.classList.add('hidden');
+                btnLoader.classList.remove('hidden');
+                
+                // Animate Header Up if first search
+                headerContainer.classList.remove('translate-y-32');
+                searchWrapper.classList.remove('translate-y-32'); // Update to search-wrapper
+                headerContainer.classList.add('scale-75', '-mt-16', 'mb-6');
+                
+                // Hide old results
+                resultsContainer.classList.add('opacity-0');
+                
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ intent: query, num_results: 6 })
+                    });
+                    
+                    const data = await response.json();
+                    renderResults(data.matches);
+                } catch (error) {
+                    console.error("Search failed", error);
+                    resultsContainer.innerHTML = `<div class="col-span-full text-center text-red-500 bg-white p-6 rounded-2xl shadow-sm">Failed to connect to the AI engine. Is the FastAPI server running?</div>`;
+                } finally {
+                    btnText.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                    
+                    // Show results
+                    resultsContainer.classList.remove('hidden');
+                    setTimeout(() => {
+                        resultsContainer.classList.remove('opacity-0');
+                    }, 100);
+                }
+            }
+
+            function renderResults(matches) {
+                resultsContainer.innerHTML = '';
+                
+                if (!matches || matches.length === 0) {
+                    resultsContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 bg-white p-6 rounded-2xl shadow-sm">No properties found matching that intent. Try another search.</div>`;
+                    return;
+                }
+
+                matches.forEach((match, index) => {
+                    // Calculate a fake "match percentage" based on distance score for the demo vibe
+                    const matchPercent = Math.max(99 - Math.floor(match.score * 50), 75);
+                    
+                    const card = document.createElement('div');
+                    card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 opacity-0";
+                    card.style.animation = `fadeUp 0.6s ease forwards ${index * 0.1}s`;
+                    
+                    card.innerHTML = `
+                        <div class="relative h-56 xl:h-64 overflow-hidden group">
+                            <!-- Note: match.image_url comes from the backend relative to the datasets folder -->
+                            <img src="${match.image_url}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700 ease-out" alt="Property" onerror="this.src='https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'">
+                            <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-emerald-600 shadow-sm flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                                ${matchPercent}% AI Match
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <p class="text-xs text-purple-600 font-bold uppercase tracking-wider mb-1">${match.architectural_style}</p>
+                                    <h3 class="text-xl font-bold text-slate-900 leading-tight">${match.spatial_flow}</h3>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center text-sm">
+                                    <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-xs">💡</span>
+                                    <span class="text-slate-600 truncate" title="${match.lighting}">${match.lighting}</span>
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <span class="w-7 h-7 rounded-full ${match.clutter_factor.toLowerCase().includes('high') ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'} flex items-center justify-center mr-3 text-xs">🗑️</span>
+                                    <span class="text-slate-600 font-medium">Clutter: ${match.clutter_factor}</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/60 rounded-xl p-4 border border-white shrink-0">
+                                <p class="text-sm text-slate-700 italic line-clamp-3" title="${match.rich_description}">
+                                    "${match.rich_description}"
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+            }
+        });
+    </script>
+    <style>
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</body>
+</html>
